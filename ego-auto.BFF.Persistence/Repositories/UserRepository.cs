@@ -18,8 +18,23 @@ public sealed class UserRepository(AppDbContext _context) : IUserRepository
            .Select(u => u.Id)
            .FirstOrDefaultAsync();
 
-    public async Task UpsertUser(SignUpRequest request)
+    public async Task UpsertUser(SignUpRequest request, string? userId)
     {
+        await SetSessionUser(userId);
+
+        using (var command = _context.Database.GetDbConnection().CreateCommand())
+        {
+            command.CommandText = "SHOW myapp.user_id;";
+            _context.Database.OpenConnection();
+            using (var result = await command.ExecuteReaderAsync())
+            {
+                if (result.Read())
+                {
+                    var userIdd = result.GetString(0);  // Assuming the value is in the first column
+                                                       // Convert or use the userId as needed
+                }
+            }
+        }
         NpgsqlParameter accountNameParam = new("p_account_name", request.AccountName ?? (object)DBNull.Value)
         {
             Direction = ParameterDirection.Input
@@ -32,13 +47,9 @@ public sealed class UserRepository(AppDbContext _context) : IUserRepository
         {
             Direction = ParameterDirection.Input
         };
-        NpgsqlParameter roleParam = new("p_role", request.Role ?? (object)DBNull.Value)
+        NpgsqlParameter roleParam = new("p_role", request.Role ?? "Renter")
         {
             Direction = ParameterDirection.Input
-        };
-        NpgsqlParameter userIdParam = new("user_id", NpgsqlTypes.NpgsqlDbType.Integer)
-        {
-            Direction = ParameterDirection.Output
         };
 
         await _context.Database.ExecuteSqlRawAsync(
@@ -51,7 +62,7 @@ public sealed class UserRepository(AppDbContext _context) : IUserRepository
     }
 
     public async Task SetSessionUser(string? userId)
-    {
+     {
         string sql;
 
         if (!string.IsNullOrEmpty(userId))

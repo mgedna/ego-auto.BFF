@@ -12,12 +12,35 @@ public sealed class VehicleRepository(AppDbContext _context) : IVehicleRepositor
 {
     public async Task UpsertVehicleAsync(VehicleUpsertRequest model)
     {
-        NpgsqlParameter vehicleIdParam = new("p_vehicle_id", model.VehicleId ?? (object)DBNull.Value);
-        NpgsqlParameter makeParam = new("p_make", model.Make ?? (object)DBNull.Value);
-        NpgsqlParameter modelParam = new("p_model", model.Model ?? (object)DBNull.Value);
-        NpgsqlParameter yearParam = new("p_year", model.Year ?? (object)DBNull.Value);
-        NpgsqlParameter pricePerDayParam = new("p_price_per_day", model.PricePerDay ?? (object)DBNull.Value);
-        NpgsqlParameter descriptionParam = new("p_description", model.Description ?? (object)DBNull.Value);
+        NpgsqlParameter vehicleIdParam = new("p_vehicle_id", model.VehicleId.HasValue ? model.VehicleId.Value : (object)DBNull.Value)
+        {
+            NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Integer 
+        };
+
+        NpgsqlParameter makeParam = new("p_make", model.Make ?? (object)DBNull.Value)
+        {
+            NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Varchar
+        };
+
+        NpgsqlParameter modelParam = new("p_model", model.Model ?? (object)DBNull.Value)
+        {
+            NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Varchar
+        };
+
+        NpgsqlParameter yearParam = new("p_year", model.Year.HasValue ? model.Year.Value : (object)DBNull.Value)
+        {
+            NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Integer
+        };
+
+        NpgsqlParameter pricePerDayParam = new("p_price_per_day", model.PricePerDay.HasValue ? (object)model.PricePerDay.Value : (object)DBNull.Value)
+        {
+            NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Numeric
+        };
+
+        NpgsqlParameter descriptionParam = new("p_description", model.Description ?? (object)DBNull.Value)
+        {
+            NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Text
+        };
 
         await _context.Database.ExecuteSqlRawAsync(
             "CALL public.upsert_vehicle(@p_vehicle_id, @p_make, @p_model, @p_year, @p_price_per_day, @p_description);",
@@ -29,6 +52,7 @@ public sealed class VehicleRepository(AppDbContext _context) : IVehicleRepositor
             descriptionParam
         );
     }
+
 
     public async Task<PaginatedResult<Vehicle>> GetVehiclesAsync(GetVehiclesRequest request)
     {

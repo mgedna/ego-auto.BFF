@@ -10,7 +10,7 @@ namespace ego_auto.BFF.Controllers;
 [ApiController]
 public class VehicleController(IVehicleService _service) : BaseController
 {
-    [Authorize(Roles = "Admin, Renter, Guest")]
+    [Authorize(Roles = "Admin, Support, Renter, Guest")]
     [HttpGet]
     public async Task<IActionResult> GetVehiclesAsync([FromQuery] GetVehiclesRequest request)     
     => Ok(await _service.GetVehiclesAsync(request));

@@ -33,15 +33,15 @@ public class UserService(IUserRepository _userRepository, IOptions<AppSettings> 
             ));
     }
 
-    public async Task<AuthenticationResponse> SignUp(SignUpRequest request)
+    public async Task<AuthenticationResponse> SignUp(SignUpRequest request, string? userId)
     {
         var existingUser = await _userRepository.GetUser(request.Email);
 
         if (existingUser is not null) throw new CustomBadRequest("Given email address exist in our database!");
 
-        await _userRepository.UpsertUser(request);
+        await _userRepository.UpsertUser(request, userId);
 
-        int userId = await _userRepository.GetUserIdByEmail(request.Email);
+        int userIdFromDb = await _userRepository.GetUserIdByEmail(request.Email);
 
         return new AuthenticationResponse
             (
@@ -50,9 +50,9 @@ public class UserService(IUserRepository _userRepository, IOptions<AppSettings> 
                     data: new()
                     {
                         Email = request.Email ?? null,
-                        Role = request.Role ?? "Guest",
-                        AccountName = request.AccountName ?? "Guest",
-                        UserId = userId is 0 ? -1 : userId
+                        Role = request.Role ?? "Renter",
+                        AccountName = request.AccountName ?? "RenterDefault",
+                        UserId = userIdFromDb is 0 ? -1 : userIdFromDb
                     },
                     jwtConfiguration: _appSettings.JwtConfiguration
                 )

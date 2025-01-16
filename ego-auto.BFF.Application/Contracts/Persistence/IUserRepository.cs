@@ -7,6 +7,6 @@ public interface IUserRepository
 {
     Task<User> GetUser(string email);
     Task<int> GetUserIdByEmail(string email);
-    Task UpsertUser(SignUpRequest request);
+    Task UpsertUser(SignUpRequest request, string? userId);
     Task SetSessionUser(string? userId);
 }
